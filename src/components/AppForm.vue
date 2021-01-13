@@ -18,7 +18,7 @@
       <textarea id="value" rows="3" v-model.trim="value"></textarea>
     </div>
 
-    <app-button type="primary" :disabled="!canAdd">Добавить</app-button>
+    <app-button type="primary" :disabled="!isFormValid">Добавить</app-button>
   </form>
 </template>
 
@@ -52,7 +52,7 @@ export default {
   },
   methods: {
     create() {
-      if (this.canAdd) {
+      if (this.isFormValid) {
         this.$emit('create', {
           type: this.type,
           value: this.value
@@ -63,7 +63,7 @@ export default {
     }
   },
   computed: {
-    canAdd() {
+    isFormValid() {
       return this.value.length > 3
     }
   }
