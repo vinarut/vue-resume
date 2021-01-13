@@ -5,7 +5,12 @@
     <div class="container column">
       <app-form @create="create"></app-form>
 
-      <app-resume :blocks="blocks" :loading="isResumeLoading"></app-resume>
+      <app-resume
+        :blocks="blocks"
+        :loading="isResumeLoading"
+        @remove="remove"
+        @moved="moved"
+      ></app-resume>
     </div>
 
     <app-loader v-if="isCommentsLoading"></app-loader>
@@ -40,7 +45,7 @@ export default {
   },
   data() {
     return {
-      resumeUrl: process.env.VUE_APP_FIREBASE_URL + '/resume.json',
+      resumeUrl: process.env.VUE_APP_FIREBASE_URL + '/resume',
       blocks: [],
       comments: [],
       isCommentsLoading: false,
@@ -57,10 +62,14 @@ export default {
         if (!data) {
           throw new Error('Форма не заполнена')
         }
-        const { name: id } = await request(this.resumeUrl, 'POST', data)
+        const block = {
+          ...data,
+          position: this.blocks.length + 1
+        }
+        const { name: id } = await request(this.resumeUrl, 'POST', block)
         this.blocks.push({
           id,
-          ...data
+          ...block
         })
       } catch (e) {
         this.alert = dangerAlert(e.message)
@@ -72,7 +81,9 @@ export default {
         const data = await request(this.resumeUrl)
 
         if (data) {
-          this.blocks = convertFirebaseResponse(data)
+          this.blocks = convertFirebaseResponse(data).sort(
+            (a, b) => a.position - b.position
+          )
         }
       } catch (e) {
         this.alert = dangerAlert(e.message)
@@ -90,6 +101,34 @@ export default {
         this.alert = dangerAlert(e.message)
       } finally {
         this.isCommentsLoading = false
+      }
+    },
+    async remove(id) {
+      try {
+        await request(this.resumeUrl + '/' + id, 'DELETE')
+        this.blocks = this.blocks.filter(block => block.id !== id)
+      } catch (e) {}
+    },
+    async moved({ newIndex, oldIndex }) {
+      const minIndex = Math.min(newIndex, oldIndex)
+      const maxIndex = Math.max(newIndex, oldIndex)
+      const needsUpdate = this.blocks
+        .slice(minIndex, maxIndex + 1)
+        .map((block, idx) => ({
+          ...block,
+          position: idx + minIndex
+        }))
+
+      try {
+        await Promise.all(
+          needsUpdate.map(block =>
+            request(this.resumeUrl + '/' + block.id, 'PATCH', {
+              position: block.position
+            })
+          )
+        )
+      } catch (e) {
+        this.alert = dangerAlert('Не удалось изменить позиции блоков')
       }
     }
   }

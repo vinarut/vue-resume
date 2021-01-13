@@ -1,7 +1,7 @@
 export async function request(url, method = 'GET', data = null) {
   const headers = {}
   let body = null
-  if (method === 'POST') {
+  if (['POST', 'PATCH'].includes(method)) {
     headers['Content-Type'] = 'application/json'
 
     if (data) {
@@ -9,7 +9,7 @@ export async function request(url, method = 'GET', data = null) {
     }
   }
 
-  const response = await fetch(url, {
+  const response = await fetch(url + '.json', {
     method,
     headers,
     body
