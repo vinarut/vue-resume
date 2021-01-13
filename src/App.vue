@@ -87,7 +87,7 @@ export default {
       this.isCommentsLoading = true
       try {
         this.comments = await request(
-          'https://jsonplaceholder.typicode.com/comments?_limit=42'
+          process.env.VUE_APP_COMMENTS_URL + '?_limit=42'
         )
       } catch (e) {
         this.alert = dangerAlert(e.message)
