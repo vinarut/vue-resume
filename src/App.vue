@@ -8,18 +8,15 @@
       <app-resume :blocks="blocks" :loading="isResumeLoading"></app-resume>
     </div>
 
-    <p v-if="!comments.length && !isCommentsLoading">
+    <app-loader v-if="isCommentsLoading"></app-loader>
+
+    <p v-else-if="!comments.length">
       <app-button type="primary" @click="loadComments"
         >Загрузить комментарии</app-button
       >
     </p>
 
-    <app-comments
-      v-else-if="comments.length"
-      :comments="comments"
-    ></app-comments>
-
-    <app-loader v-else-if="isCommentsLoading"></app-loader>
+    <app-comments v-else :comments="comments"></app-comments>
   </div>
 </template>
 
